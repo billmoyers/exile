@@ -152,7 +152,7 @@ int Controller::run()
 	ViewPtr newView(new Exile::View::View(world));
 	view = newView;
 	
-	world->addObjectListener(this);
+	world->addEventListener(this);
 
 	size_t hWnd = 0;
 	View::View::getWindow()->getCustomAttribute("WINDOW", &hWnd);
@@ -182,11 +182,7 @@ int Controller::run()
 	Ogre::Root::getSingleton().startRendering();
 }
 
-void Controller::onObjectCreated(Object *object)
-{
-}
-
-void Controller::onObjectRemoved(Object *object)
+void Controller::onEvent(Event *event)
 {
 }
 

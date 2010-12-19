@@ -21,7 +21,37 @@ namespace Model
 	class Class;
 	class NameGenerator;
 	class World;
-	class ObjectListener;
+	class Event;
+	typedef boost::shared_ptr<Event> EventPtr;
+
+	class EventListener
+	{
+		public:
+			virtual void onEvent(Event *event) = 0;
+	};	
+	
+	/**
+	 * @class EventHandler
+	 * Instances of this type can either dispatch events to lower level
+	 * handlers or perform the actual work of the event.
+	 **/
+	class EventHandler
+	{
+		public:
+			virtual void handleEvent(Event *event) = 0;
+	};
+	
+	/**
+	 * @class EventListenable
+	 * If instances of this type can receive events, @ref EventListener
+	 * objects should be able to register to listen to those events.
+	 **/
+	class EventListenable
+	{
+		public:
+			virtual void addEventListener(EventListener *listener) = 0;
+			virtual void removeEventListener(EventListener *listener) = 0;
+	};
 
 	class Class
 	{
@@ -50,8 +80,11 @@ namespace Model
 			std::vector<std::string> verbs;
 	};
 
-	class Object
+	class Object : EventHandler
 	{
+		public:
+			void handleEvent(Event *event);
+			
 		private:
 			int weight;
 			Tile *location;
@@ -64,7 +97,7 @@ namespace Model
 			
 			Race *getRace() { return race; }
 			Class *getClass() { return cls; }
-		
+
 		private:
 			std::string name;
 			std::string preTitle;
@@ -131,7 +164,7 @@ namespace Model
 	};
 
 	typedef boost::multi_array<MapTile*, 2> MapTileArray;
-	class Map
+	class Map : Object
 	{
 		public:
 			Map();
@@ -150,23 +183,55 @@ namespace Model
 			MapTileArray *map;
 	};
 
-	class ObjectListener
+	/**
+	 * @class Event
+	 * Encapsulates discrete actions in the world so that they can be
+	 * seemlessly passed between components (or across a remote connection).
+	 * Each event is eventually dispatched to its target object. The dispatch
+	 * may create other events to be handled, which will be labeled as child
+	 * events for the purpose of rolling back/undoing.
+	 **/
+	class Event : EventHandler
 	{
 		public:
-			virtual void onObjectCreated(Object *object) = 0;
-			virtual void onObjectRemoved(Object *object) = 0;
+			EventHandler *getEventHandler() { return rootHandler; }
+			Object *getTarget() { return target; }
+
+			void handleEvent(Event *event) { rootHandler->handleEvent(event); }
+			
+		private:
+			EventPtr parent;
+			Object *target;
+			EventHandler *rootHandler;
 	};
-	
-	class World
+
+	/**
+	 * @class ObjectCreateEvent
+	 * Event that is fired when an object is created.
+	 **/	
+	class ObjectCreateEvent : Event
+	{
+		public:
+			ObjectCreateEvent(Object *object);
+	};	
+
+	/**
+	 * @class World
+	 * Container for all objects, maps, entities, etc. for the instance
+	 * currently being played. Also handles events (from the controller or
+	 * children of other events) and dispatches them to their targets.
+	 **/
+	class World : EventHandler, EventListenable
 	{
 		public:
 			World();
 			
 			const std::vector<Map*> &getMaps() { return maps; }
 	
-			void addObjectListener(ObjectListener *listener) { objectListeners.push_back(listener); }
-			void removeObjectListener(ObjectListener *listener);
-	
+			void handleEvent(Event *event);
+			void addEventListener(EventListener *listener) { eventListeners.push_back(listener); }
+			void removeEventListener(EventListener *listener);
+			
 		private:
 			std::vector<Class *> classes;
 			std::vector<Race *> races;
@@ -174,7 +239,7 @@ namespace Model
 			std::vector<Tile *> tiles;
 			std::vector<Map *> maps;
 			
-			std::vector<ObjectListener *> objectListeners;
+			std::vector<EventListener *> eventListeners;
 	};
 }
 }

@@ -7,7 +7,7 @@ CXXFLAGS = $(shell pkg-config --cflags $(LIBS)) $(DEFINES) -I. -g
 LD = g++ 
 LDFLAGS = $(shell pkg-config --libs $(LIBS))
 
-MODEL_SRCS = model/World.cc model/MapTile.cc model/Map.cc model/Entity.cc
+MODEL_SRCS = model/World.cc model/MapTile.cc model/Map.cc model/Entity.cc model/Object.cc
 MODEL_OBJS = $(subst .cc,.o,$(MODEL_SRCS))
 MODEL_INCS = include/model.h
 
@@ -21,6 +21,7 @@ CONTROLLER_INCS = include/controller.h $(VIEW_INCS) $(MODEL_INCS)
 
 SRCS = main.cc $(MODEL_SRCS) $(VIEW_SRCS) $(CONTROLLER_SRCS)
 OBJS = $(subst .cc,.o,$(SRCS))
+INCS = $(VIEW_INCS) $(MODEL_INCS) $(CONTROLLER_INCS)
 
 $(NAME): $(OBJS)
 	$(CXX) $(LDFLAGS) $(OBJS) -o $(NAME)
@@ -35,6 +36,9 @@ $(CONTROLLER_OBJS) : %.o: %.cc $(CONTROLLER_INCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(NAME) $(OBJS)
+	rm -f $(NAME) $(OBJS) ./doc
 
 all: $(NAME)
+
+doc: $(SRCS) $(INCS)
+	doxygen ./doxygen.conf

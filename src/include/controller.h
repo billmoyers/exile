@@ -14,7 +14,7 @@ namespace Exile
 namespace Controller
 {
 	class Controller : 
-		Model::ObjectListener,
+		Model::EventListener,
 		Ogre::WindowEventListener, 
 		Ogre::FrameListener, 
 		OIS::KeyListener, 
@@ -25,8 +25,7 @@ namespace Controller
 			const std::vector<std::string> &listWorlds();
 			Model::World *loadWorld(std::string &name);
 			
-			void onObjectCreated(Model::Object *object);
-			void onObjectRemoved(Model::Object *object);
+			void onEvent(Model::Event *event);
 			
 			int run();
 		

@@ -1,3 +1,5 @@
+#include <boost/foreach.hpp>
+
 #include "include/model.h"
 
 using namespace Exile::Model;
@@ -38,6 +40,15 @@ World::World()
 	}
 }
 
-void World::removeObjectListener(ObjectListener *listener)
+void World::removeEventListener(EventListener *listener)
 {
+}
+
+void World::handleEvent(Event *event)
+{ 
+	event->getTarget()->handleEvent(event); 
+	BOOST_FOREACH(EventListener *listener, eventListeners)
+	{
+		listener->onEvent(event);
+	}
 }
