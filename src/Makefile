@@ -1,13 +1,14 @@
 NAME = exile
 
 DEFINES =
-LIBS = OGRE OIS
+LIBS = OGRE OIS lua50
 CXX = g++
 CXXFLAGS = $(shell pkg-config --cflags $(LIBS)) $(DEFINES) -I. -g
 LD = g++ 
-LDFLAGS = $(shell pkg-config --libs $(LIBS))
+LDFLAGS = $(shell pkg-config --libs $(LIBS)) -lluabind
 
-MODEL_SRCS = model/World.cc model/MapTile.cc model/Map.cc model/Entity.cc model/Object.cc
+MODEL_SRCS = model/World.cc model/MapTile.cc model/Map.cc model/Entity.cc \
+	model/Object.cc model/Event.cc model/lua.cc
 MODEL_OBJS = $(subst .cc,.o,$(MODEL_SRCS))
 MODEL_INCS = include/model.h
 
@@ -36,7 +37,8 @@ $(CONTROLLER_OBJS) : %.o: %.cc $(CONTROLLER_INCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(NAME) $(OBJS) ./doc
+	rm -f $(NAME) $(OBJS) 
+	rm -rf ./doc
 
 all: $(NAME)
 

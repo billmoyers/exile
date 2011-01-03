@@ -47,3 +47,8 @@ Ogre::SceneNode *MapView::getSceneNode(int i, int j)
 {
 	return (*sceneNodes)[i][j];
 }
+
+MapTile *MapView::getTileAt(Ogre::Vector2 &pos)
+{
+	return map->getTile((int) (pos[0]+0.5), (int) (pos[1]+0.5));
+}

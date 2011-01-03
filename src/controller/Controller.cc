@@ -4,6 +4,7 @@
 
 #include "include/controller.h"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/serialization/nvp.hpp>
@@ -36,12 +37,18 @@ Controller::Controller(std::string configFile)
 			String arch_name = i->second;
 			ResourceGroupManager::getSingleton().addResourceLocation(
 					arch_name, type_name, section_name);
+			printf("addResourceLocation: %s %s %s\n",
+				arch_name.c_str(),
+				type_name.c_str(),
+				section_name.c_str());
 		}
 	}
 
 	ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 	
 	cout << "Controller: created." << endl;
+
+	activeEntity = NULL;
 }
 
 const std::vector<std::string> &Controller::listWorlds()
@@ -52,13 +59,13 @@ const std::vector<std::string> &Controller::listWorlds()
 
 	StringVectorPtr files = 		
 		ResourceGroupManager::getSingleton().findResourceNames(
-			"General", "*.world.xml", false);
-
-	cout << __FUNCTION__ << ": " << files->size() << " worlds found" << endl;
+			"General", "worlds/*", true);
 
 	BOOST_FOREACH(string s, *files)		
 	{
-		worlds.push_back(s);
+		std::vector<std::string> strs;
+		boost::split(strs, s, boost::is_any_of("/\\"));
+		worlds.push_back(strs[1]);
 	}		
 	
 	return worlds;
@@ -68,11 +75,26 @@ World *Controller::loadWorld(std::string &name)
 {
 	using namespace Ogre;
 
-	DataStreamPtr ds = 
-		ResourceGroupManager::getSingleton().openResource(
-			"General", name);
+	printf("Controller::loadWorld: name=%s\n", name.c_str());
 
-	World *world = new World();
+	ResourceGroupManager::getSingleton().addResourceLocation(
+		"../media/worlds/"+name, "FileSystem", "World::"+name);
+	
+	FileInfoListPtr fileInfoList = ResourceGroupManager::getSingleton().
+		listResourceFileInfo("World::"+name);	
+		
+	BOOST_FOREACH(FileInfo info, *fileInfoList)
+	{
+		if (info.filename == "world.lua")
+		{
+			string path("../media/worlds/"+name+"/world.lua");
+			world->loadFromFile(path);
+			return world;
+		}
+	}
+	
+	printf("Controller::loadWorld: Failed finding appropriate resources\n");
+	
 	return world;
 }
 			
@@ -98,6 +120,57 @@ bool Controller::mouseMoved(const OIS::MouseEvent &e)
 
 bool Controller::mousePressed(const OIS::MouseEvent &e, OIS::MouseButtonID id)
 {
+	using namespace Ogre;
+
+	if (id == OIS::MB_Left)
+	{
+		double uw = view->getCamera()->getOrthoWindowWidth();
+		double uh = uw;
+		
+		double sw = view->getWindow()->getWidth();
+		double sh = view->getWindow()->getHeight();
+
+		double wx = e.state.X.abs;
+		double wy = ((sw-sh)/2) + sh - e.state.Y.abs;
+
+		double cx = uw*(wx/sw) - uw/2;
+		double cy = uh*(wy/sw) - uh/2;
+
+		Vector2 clickPos(cx, cy);
+		Vector2 cameraPos(view->getCamera()->getPosition()[0], view->getCamera()->getPosition()[1]);
+		Vector2 mapPos(0, 0);
+		Vector2 fpos = clickPos + cameraPos - mapPos;
+		
+		MapTile *m = view->getMapView()->getTileAt(fpos);
+
+		printf("Controller::click (%f,%f)\n", fpos[0], fpos[1]);
+
+		if (m != NULL)
+		{
+			printf("Controller::click: tile=%d,%d\n", m->getI(), m->getJ());
+
+			bool selected = false;
+			
+			BOOST_FOREACH(Object *object, m->getObjects())
+			{
+				Model::Entity *e = dynamic_cast<Model::Entity *>(object);
+				if (e != NULL)
+				{
+					activeEntity = e;
+					selected = true;
+				}
+			}
+
+			if (!selected)
+			{
+				if (activeEntity != NULL)
+				{
+					Event *event = new ObjectMoveEvent(activeEntity, activeEntity->getLocation(), m);
+					world->handleEvent(event);
+				}
+			}
+		}
+	}
 }
 
 bool Controller::mouseReleased(const OIS::MouseEvent &e, OIS::MouseButtonID id)
@@ -148,12 +221,17 @@ bool Controller::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 int Controller::run()
 {
-	World *world = new World();
-	ViewPtr newView(new Exile::View::View(world));
-	view = newView;
-	
-	world->addEventListener(this);
+	world = new World();
+	WorldView *worldView = new WorldView(world);
+	view = new View::View(worldView);
 
+	world->addEventListener(this);
+	world->addEventListener(worldView);
+	world->addEventListener(view);
+
+	std::string worldName(listWorlds()[0]);
+	loadWorld(worldName);
+	
 	size_t hWnd = 0;
 	View::View::getWindow()->getCustomAttribute("WINDOW", &hWnd);
 	std::stringstream wnd;
@@ -176,6 +254,14 @@ int Controller::run()
 	
 	keyboard->setEventCallback(this);
 	mouse->setEventCallback(this);
+
+	unsigned int width, height, depth;
+	int left, top;
+	View::View::getWindow()->getMetrics(width, height, depth, left, top);
+
+	const OIS::MouseState &ms = mouse->getMouseState();
+	ms.width = width;
+	ms.height = height;
 
 	Ogre::WindowEventUtilities::addWindowEventListener(View::View::getWindow(), this);
 	Ogre::Root::getSingleton().addFrameListener(this);

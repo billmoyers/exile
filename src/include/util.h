@@ -1,8 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#define AS_BLOCK(decl, obj) \
-	decl objAs = dynamic_cast<decl>(obj);\
-	if (objAs != NULL)
+#define AS_BLOCK(type, var, obj) \
+	type var = dynamic_cast<type>(obj);\
+	if (var != NULL)
 
 #endif

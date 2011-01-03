@@ -45,13 +45,17 @@ namespace Controller
 			bool frameEnded(const Ogre::FrameEvent& evt);
 			
 		private:
+			Exile::Model::Entity *activeEntity;
+			
 			std::vector<std::string> worlds;
 			
-			Exile::View::ViewPtr view;
+			Exile::View::View *view;
 			
 			OIS::InputManager *inputManager;
 			OIS::Mouse *mouse;
 			OIS::Keyboard *keyboard;
+			
+			Model::World *world;
 	};
 	typedef boost::shared_ptr<Exile::Controller::Controller> ControllerPtr;
 

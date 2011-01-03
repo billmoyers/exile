@@ -2,21 +2,23 @@
 
 using namespace Exile::Model;
 
-Event::Event(Object *object) :
-	dispatched(false), active(true)
+Event::Event(Object *object)
 {
 	target = object;
+	active = true;
+	stage = 0;
+	lastListener = NULL;
 }
 
-void Event::cancel(EventListener *listener)
+void Event::pause(EventListener *source)
 {
 	active = false;
-	lastListener = listener;
+	lastListener = source;
 }
 
 void Event::resume()
 {
 	active = true;
-	rootHandler->handleEvent(event);
+	rootHandler->handleEvent(this);
 }
 

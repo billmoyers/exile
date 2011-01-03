@@ -2,10 +2,7 @@
 
 using namespace Exile::Model;
 
-MapTile::MapTile()
-{
-}
-
-MapTile::MapTile(Tile *tile) : tile(tile)
+MapTile::MapTile(int i, int j, Tile *tile, Map *map) : 
+	i(i), j(j), tile(tile), map(map)
 {
 }

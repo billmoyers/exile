@@ -23,6 +23,9 @@ namespace View
 		public:
 			ObjectView(Model::Object *object, Ogre::SceneNode *parentNode, WorldView *worldView);
 			
+			void setLocation(Ogre::Vector2 loc);
+			void setParentNode(Ogre::SceneNode *parentNode);
+			
 		protected:
 			void createMesh(std::string name);
 		
@@ -41,6 +44,7 @@ namespace View
 			Model::Map *getMap() { return map; }
 			Ogre::SceneNode *getSceneNode() { return node; }
 			Ogre::SceneNode *getSceneNode(int i, int j);
+			Model::MapTile *getTileAt(Ogre::Vector2 &pos);
 			
 		private:
 			Model::Map *map;
@@ -50,35 +54,41 @@ namespace View
 			boost::multi_array<Ogre::SceneNode *, 2> *sceneNodes;
 	};
 	
-	class WorldView
+	class WorldView : public Model::EventListener
 	{
 		public:
 			WorldView(Model::World *world);
+
+			void onEvent(Model::Event *event);
 			
 			Ogre::SceneManager *getSceneManager() { return sceneManager; }
 			Model::World *getWorld() { return world; }
-			MapViewPtr getMapView() { return mapView; }
+			MapView *getMapView() { return mapView; }
 		private:
 			Ogre::SceneManager *sceneManager;
 			Model::World *world;
-			MapViewPtr mapView;
-			
-			std::map<Model::Object*, ObjectViewPtr> objectViews;
+
+			MapView *mapView;			
+			std::map<Model::Map*, MapView*> mapViews;
+			std::map<Model::Object*, ObjectView*> objectViews;
 	};
 	
-	class View
+	class View : public Model::EventListener
 	{
 		public:
-			View(Model::World *world);
+			View(WorldView *worldView);
 			
 			void update();
+			WorldView *getWorldView() { return worldView; }
+			MapView *getMapView() { return worldView->getMapView(); }
 			
+			void onEvent(Model::Event *event);
 			
 			Ogre::Camera *getCamera() { return camera; }
 			static Ogre::RenderWindow *getWindow() { return window; }
 	
 		private:
-			WorldViewPtr worldView;
+			WorldView *worldView;
 			
 			Ogre::Camera *camera;
 			Ogre::Viewport *viewport;

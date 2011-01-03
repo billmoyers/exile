@@ -69,8 +69,9 @@ ObjectView::ObjectView(Model::Object *object, Ogre::SceneNode *node, WorldView *
 		}
 	}
 	
-	Ogre::SceneNode *tnode = node->createChildSceneNode(centerOffset);
+	Ogre::SceneNode *tnode = node->createChildSceneNode(name+buf, centerOffset);
 	tnode->attachObject(entity);
+	this->node = tnode;
 }
 
 void ObjectView::createMesh(string name)
@@ -102,4 +103,10 @@ void ObjectView::createMesh(string name)
 		
 	mm.createPlane(meshName, "General",
 		Plane(Vector3::UNIT_Z, Vector3::ZERO), w, h, 1, 1);
+}
+
+void ObjectView::setParentNode(Ogre::SceneNode *parentNode)
+{
+	node->getParentSceneNode()->removeChild(node);
+	parentNode->addChild(node);
 }

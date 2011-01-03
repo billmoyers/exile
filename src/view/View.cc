@@ -11,7 +11,8 @@ using namespace Exile::Model;
 
 Ogre::RenderWindow *View::window;
 
-View::View(World *world)
+View::View(WorldView *worldView) :
+	worldView(worldView)
 {
 	using namespace Ogre;
 	
@@ -21,13 +22,13 @@ View::View(World *world)
 		View::window = Root::getSingleton().initialise(true, "Window");
 	}
 
-	WorldViewPtr wvp(new WorldView(world));
-	worldView = wvp;
-
 	camera = worldView->getSceneManager()->createCamera("camera");
 	camera->setProjectionType(PT_ORTHOGRAPHIC);
-	camera->setPosition(worldView->getMapView()->getCenter() + Vector3(0, 0, 10));
-	camera->lookAt(worldView->getMapView()->getCenter());
+	if (worldView->getMapView() != NULL)
+	{
+		camera->setPosition(worldView->getMapView()->getCenter() + Vector3(0, 0, 10));
+		camera->lookAt(worldView->getMapView()->getCenter());
+	}
 	camera->setOrthoWindowWidth(20);
 	
 	viewport = View::window->addViewport(camera);
@@ -35,4 +36,18 @@ View::View(World *world)
 	
 	camera->setNearClipDistance(0.5);
 	camera->setFarClipDistance(5000);		
+}
+
+void View::onEvent(Model::Event *event)
+{
+	using namespace Ogre;
+
+	AS_BLOCK (ObjectCreateEvent *, oce, event)
+	{
+		AS_BLOCK (Map *, map, event->getTarget())
+		{
+			camera->setPosition(worldView->getMapView()->getCenter() + Vector3(0, 0, 10));
+			camera->lookAt(worldView->getMapView()->getCenter());
+		}
+	}
 }

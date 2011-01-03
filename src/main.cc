@@ -18,7 +18,7 @@ using namespace Exile::Controller;
 
 int	main( int argc, char **argv )
 {
-	ControllerPtr ct(new Controller("resources.cfg"));
-	ct->run();
+	Controller *c = new Controller("resources.cfg");
+	c->run();
 	return 0;
 }

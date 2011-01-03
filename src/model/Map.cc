@@ -9,27 +9,44 @@ Map::Map()
 {
 }
 
-Map::Map(std::vector<Tile *> tiles, int w, int h, World *world)
+Map::Map(int w, int h)
 {
-	cout << __FUNCTION__ << ": " << tiles.size() << " tiles, geometry=" << w << "x" << h << endl;
-
 	this->tiles = tiles;
 
 	map = new MapTileArray(boost::extents[w][h]);
-	
-	for (int i = 0; i < w; i++)
+
+	width = w;
+	height = h;
+}
+
+void Map::generate()
+{
+	for (int i = 0; i < width; i++)
 	{
-		for (int j = 0; j < h; j++)
+		for (int j = 0; j < height; j++)
 		{
-			MapTile *mapTile = new MapTile(tiles[rand()%tiles.size()]);
+			MapTile *mapTile = new MapTile(i, j, tiles[rand()%tiles.size()], this);
 			(*map)[i][j] = mapTile;
 		}
 	}
-	
-	this->world = world;
 }
 
 void Map::setObjectLocation(Object *object, int i, int j)
 {
-	(*map)[i][j]->addObject(object);
+	setObjectLocation(object, (*map)[i][j]);
+}
+
+void Map::setObjectLocation(Object *object, MapTile *tile)
+{
+	MapTile *ol = object->getLocation();
+	if (ol == NULL) ol = tile;
+	world->handleEvent(new ObjectMoveEvent(object, ol, tile));
+}
+
+MapTile *Map::getTile(int i, int j)
+{
+	if (i < 0 || i >= width || j < 0 || j >= height)
+		return NULL;
+	else
+		return (*map)[i][j];
 }
