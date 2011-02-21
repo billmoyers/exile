@@ -46,10 +46,13 @@ namespace View
 			Ogre::SceneNode *getSceneNode(int i, int j);
 			Model::MapTile *getTileAt(Ogre::Vector2 &pos);
 			
+			void hoverTile(Model::MapTile *tile);
+
 		private:
 			Model::Map *map;
 			Ogre::SceneNode *node;
 			WorldViewPtr worldView;
+			Model::MapTile *hover;
 			
 			boost::multi_array<Ogre::SceneNode *, 2> *sceneNodes;
 	};

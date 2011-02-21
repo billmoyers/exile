@@ -57,12 +57,10 @@ namespace Controller
 			
 			Model::World *world;
 	};
-	typedef boost::shared_ptr<Exile::Controller::Controller> ControllerPtr;
 
 	class RemoteController : Controller
 	{
 	};
-	typedef boost::shared_ptr<Exile::Controller::RemoteController> RemoteControllerPtr;
 }
 }
 

@@ -345,6 +345,24 @@ namespace Model
 		private:
 			MapTile *src, *dest;
 	};	
+	
+	/**
+	 * @class TurnEvent
+	 * Indicates that a turn has begun for a certain entity and specifies
+	 * how many action points they may use during that turn.
+	 **/
+	class TurnEvent : public Event
+	{
+		public:
+			TurnEvent(Entity *entity, int duration);
+			
+			int getDuration() { return duration; }
+			Entity *getEntity() { return entity; }
+		
+		private:
+			Entity *entity;
+			int duration;
+	};
 
 	/**
 	 * @class World

@@ -116,6 +116,29 @@ bool Controller::keyReleased(const OIS::KeyEvent &arg)
 
 bool Controller::mouseMoved(const OIS::MouseEvent &e)
 {	
+	using namespace Ogre;
+
+	double uw = view->getCamera()->getOrthoWindowWidth();
+	double uh = uw;
+
+	double sw = view->getWindow()->getWidth();
+	double sh = view->getWindow()->getHeight();
+
+	double wx = e.state.X.abs;
+	double wy = ((sw-sh)/2) + sh - e.state.Y.abs;
+
+	double cx = uw*(wx/sw) - uw/2;
+	double cy = uh*(wy/sw) - uh/2;
+
+	Vector2 clickPos(cx, cy);
+	Vector2 cameraPos(view->getCamera()->getPosition()[0], view->getCamera()->getPosition()[1]);
+	Vector2 mapPos(0, 0);
+	Vector2 fpos = clickPos + cameraPos - mapPos;
+
+	MapTile *m = view->getMapView()->getTileAt(fpos);
+
+	if (m != NULL)
+		view->getMapView()->hoverTile(m);
 }
 
 bool Controller::mousePressed(const OIS::MouseEvent &e, OIS::MouseButtonID id)

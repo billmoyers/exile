@@ -12,6 +12,7 @@ MapView::MapView(Map *map, WorldViewPtr worldView) :
 	Ogre::MeshManager::getSingleton().createPlane("plane.mesh", "General",
 		Plane(Vector3::UNIT_Z, Vector3::ZERO), 1, 1, 1, 1);
 
+	hover = NULL;
 	node = worldView->getSceneManager()->getRootSceneNode()->createChildSceneNode("map", Vector3::ZERO);
 	
 	int w = map->getWidth();
@@ -51,4 +52,25 @@ Ogre::SceneNode *MapView::getSceneNode(int i, int j)
 MapTile *MapView::getTileAt(Ogre::Vector2 &pos)
 {
 	return map->getTile((int) (pos[0]+0.5), (int) (pos[1]+0.5));
+}
+
+void MapView::hoverTile(Model::MapTile *tile)
+{
+	using namespace Ogre;
+
+	if (hover != NULL && hover != tile)
+	{
+		SceneNode *hn = getSceneNode(hover->getI(), hover->getJ());
+		if (hn != NULL)
+			for (int i = 0; i < hn->numChildren(); i++)
+				hn->getChild(i)->setScale(1, 1, 1);
+	}
+	if (hover != tile)
+	{
+		SceneNode *tn = getSceneNode(tile->getI(), tile->getJ());
+		if (tn != NULL)
+			for (int i = 0; i < tn->numChildren(); i++)
+				tn->getChild(i)->setScale(1.2, 1.2, 1);
+	}
+	hover = tile;
 }
